@@ -1,5 +1,5 @@
 
-/*  cfoogol.c  */  
+/*  fc.c  */  
 /*  A small public-domain compiler for an             */ 
 /*  Algol-like language.                              */ 
 /*  This compiler was written by Per Lindberg.        */ 
@@ -7,6 +7,9 @@
 /*  <cowan@snark.thyrsus.com>                         */  
 /*  It was obtained from comp.sources.misc volume42   */  
 
+/*  USAGE - (after fc.c has been compiled)            */ 
+/*  fc infile outfile.c                               */ 
+ 
 /*  It is based on the VALGOL I compiler published by */ 
 /*  G.A. Edgar in Dr. Dobb's Journal May 1985.        */  
 /*  It was implemented for the purpose of             */    
@@ -23,8 +26,12 @@
 
 #define UNIX
 
-
 #include <stdio.h>
+#include <stdlib.h> 
+#include <string.h>
+#include <ctype.h>
+#include <unistd.h> 
+
 
 #define isupper(c) ((c) >= 'A' && (c) <= 'Z')
 #define tolower(c) ((c) - 'A' + 'a')
@@ -52,7 +59,8 @@ char token[MAXTOKEN],
      *usage =
      "usage: 'fc [-debug] infile [outfile]'";
 
-main(argc,argv) int argc; char *argv[]; {
+
+int main(int argc, char *argv[]) { /* int argc; char *argv[]; */  
   if (argc < 2) error(usage);
   if (*argv[1] == '-') { debug = 1; --argc; ++argv; }
   if (argc < 2) error(usage);
@@ -62,6 +70,9 @@ main(argc,argv) int argc; char *argv[]; {
   if (!PROGRAM()) error("Syntax error");
   fclose(inf);
   fclose(outf);
+  
+  return 0; 
+  
 }
 
 
@@ -106,7 +117,7 @@ init() {
 }
 
 
-error(msg) char *msg; {
+void error(char *msg) /*char *msg; */  {
   printf("\n\nFoo: %s", msg);
   if (linecount) printf(" at line %d",linecount + 1);
   printf("\n");

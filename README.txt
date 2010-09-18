@@ -2,7 +2,7 @@
 
 While looking around for public-domain parsers and interpreters, I 
 found this neat little compiler from comp.sources.misc (volume 42).  
-When you compile cfoogol.c, you'll get lots of warnings but the code 
+When you compile fc.c, you'll get lots of warnings but the code 
 does compile successfully, producing an executable, and the executable 
 works too - compiling a foogol program and emitting C code.  
 
