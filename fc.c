@@ -5,6 +5,7 @@
 /*  This compiler was written by Per Lindberg.        */ 
 /*  Version 5 changes by John Cowan                   */ 
 /*  <cowan@snark.thyrsus.com>                         */  
+/*  Header file fc.h added by Andy Elvey              */   
 /*  It was obtained from comp.sources.misc volume42   */  
 
 /*  USAGE - (after fc.c has been compiled)            */ 
@@ -31,10 +32,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h> 
+#include "fc.h" 
 
-
-#define isupper(c) ((c) >= 'A' && (c) <= 'Z')
-#define tolower(c) ((c) - 'A' + 'a')
+#define is_upper(c) ((c) >= 'A' && (c) <= 'Z')
+#define to_lower(c) ((c) - 'A' + 'a')
 
 #define MAXTAB     25           /* Tweak these to your own liking  */
 #define MAXTOKEN   80
@@ -60,7 +61,7 @@ char token[MAXTOKEN],
      "usage: 'fc [-debug] infile [outfile]'";
 
 
-int main(int argc, char *argv[]) { /* int argc; char *argv[]; */  
+int main(int argc, char *argv[]) { 
   if (argc < 2) error(usage);
   if (*argv[1] == '-') { debug = 1; --argc; ++argv; }
   if (argc < 2) error(usage);
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) { /* int argc; char *argv[]; */
 }
 
 
-char *defaultext(fname,ext,force) char *fname, *ext; int force; {
+char *defaultext(char *fname, char *ext, int force) {
   static char result[255];
   char c, *point, *s = result;
   strcpy(result,fname);
@@ -92,7 +93,7 @@ char *defaultext(fname,ext,force) char *fname, *ext; int force; {
 }
 
 
-openinfile(fname) char *fname; {
+void openinfile(char *fname) {
   char *defaultext();
   d("openinfile",defaultext(fname,".foo",0),"");
   if ((inf = fopen(defaultext(fname,".foo",0),"r")) == NULL)
@@ -100,7 +101,7 @@ openinfile(fname) char *fname; {
 }
 
 
-openoutfile(fname) char *fname; {
+void openoutfile(char *fname) {
   char *defaultext();
   d("openoutfile",defaultext(fname,".c",1),"");
   if ((outf = fopen(defaultext(fname,".c",1),"w")) == NULL)
@@ -108,7 +109,7 @@ openoutfile(fname) char *fname; {
 }
 
 
-init() {
+void init(void) {
   int i;
   d("init","","");
   get2();
@@ -117,7 +118,7 @@ init() {
 }
 
 
-void error(char *msg) /*char *msg; */  {
+void error(char *msg) {
   printf("\n\nFoo: %s", msg);
   if (linecount) printf(" at line %d",linecount + 1);
   printf("\n");
@@ -125,31 +126,31 @@ void error(char *msg) /*char *msg; */  {
 }
 
 
-error2(s1,s2) char *s1,*s2; {
+void error2(char *s1, char *s2) {
   static char msg[80];
   sprintf(msg,"%s\"%s\"",s1,s2);
   error(msg);
 }
 
 
-lowcase(s) char *s; {
+void lowcase(char *s) {
   char c;
-  for (c = *s; c = *s; ++s) if (isupper(c)) *s = tolower(c);
+  for (c = *s; c = *s; ++s) if (is_upper(c)) *s = to_lower(c);
 }
 
 
 /* Basic I/O functions */
 
-int out(line) char *line; {
+int out(char *line) {
   char c, symb[MAXTOKEN], *subst(), *s = symb;
   int printmode = 1, chmode = 1;
   while(c = *line++) {
     if (c == ' ') { if (chmode) putc('\t',outf);
-                    chmode = 0;
+         chmode = 0;
     } else {
       chmode = 1;
       if (c != 39) { if (printmode) putc(c,outf);
-                     else           *s++ = c;
+                     else *s++ = c;
       } else if (!printmode) {
              *s = '\0';
              if (*symb) fprintf(outf,"%s",subst(symb));
@@ -165,7 +166,7 @@ int out(line) char *line; {
 }
 
 
-gettoken() {
+void gettoken(void) {
   strcpy(token,pending); get2();
   if (!strcmp("/",token) && !strcmp("*",pending)) {
     d("comment:",token,pending);
@@ -180,7 +181,7 @@ d("gettoken returning",token,pending);
 }
 
 
-get2() {
+void get2(void) {
   int c0, c, typ, count = 1;
   char *p = pending;
   while((typ=type(c0=getc(inf))) == WHITESPACE) if (c0 == '\n') ++linecount;
@@ -207,7 +208,7 @@ get2() {
 }
 
 
-int type(c) int c; {
+int type(int c) {
   if (c == EOF) return -1;
   if (c >= '0' && c <= '9') return(NUMBER);
   if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') return(LETTER);
@@ -220,7 +221,7 @@ int type(c) int c; {
 
 /* Basic input matching functions */
 
-int match(s) char *s; {
+int match(char *s) {
 d("match",token,s);
   lowcase(token);
   if (strcmp(s,token)) return 0;
@@ -228,7 +229,7 @@ d("match",token,s);
 }
 
 
-int id(name) char *name; {
+int id(char *name) {
   int t;
   char c, *p = token;
   d("id",token,name);
@@ -244,17 +245,19 @@ int id(name) char *name; {
 }
 
 
-int number(name) char *name; {
+int number(char *name) {
   char c, *p = token;
   d("number",token,name);
-  while (c = *p++) if (type(c) != NUMBER) return(0);
+  while (c = *p++) {
+    if (type(c) != NUMBER) return(0); 
+  }  
   enter(name,token);
   gettoken();
   return(1);
 }
 
 
-int string(name) char *name; {
+int string(char *name) {
   d("string",token,name);
   if (*token != '"') return 0;
   enter(name,token);
@@ -263,7 +266,7 @@ int string(name) char *name; {
 }
 
 
-label(name) char *name; {
+void label(char *name) {
   char result[6];
   d("label ",name,"");
   sprintf(result,"L%d",labelcount++);
@@ -273,9 +276,9 @@ label(name) char *name; {
 
 /* Internal symbol table */
 
-enter(key,val) char *key, *val; {
+void enter(char *key, char *val) {
   int i;
-  d("enter ",val,key);
+  d("enter ",val, key);
   for (i = 0; i < MAXTAB; i++) {
     if (keytab[i][0] == '\0') {
       strcpy(keytab[i],key);
@@ -287,7 +290,7 @@ enter(key,val) char *key, *val; {
 }
 
 
-int lookup(key) char *key; {
+int lookup(char *key) {
   int i;
   for (i = MAXTAB-1; i >= 0 ; i--) {
     if (!strcmp(key,keytab[i])) {
@@ -299,19 +302,20 @@ int lookup(key) char *key; {
 }
 
 
-char *subst(key) char *key; {
+char *subst(char *key) {
   return symtab[lookup(key)];
 }
 
 
-Remove(key) char *key; {
+void remove_(char *key) {
   keytab[lookup(key)][0] = '\0';
 }
 
 
 /* Syntax definition. This is the neat part! */
 
-int PROGRAM() { d("PROGRAM",token,pending);
+int PROGRAM(void) { 
+  d("PROGRAM",token,pending);
   if (!match("begin"))	return 0;	out("#include <stdio.h>");
                                         out("main() {");
   if (!OPT_DECLARATION()) return 0;
@@ -322,19 +326,22 @@ int PROGRAM() { d("PROGRAM",token,pending);
   return 1;
 }
 
-int OPT_DECLARATION() { d("OPT_DECLARATION",token,pending);
+int OPT_DECLARATION(void) {  
+  d("OPT_DECLARATION",token,pending);
   if (DECLARATION()
   && !match(";")) return 0;
   return 1;
 }
 
-int DECLARATION() { d("DECLARATION",token,pending);
+int DECLARATION(void) { 
+  d("DECLARATION",token,pending);
   if (!match("integer")) return 0;	out("int");
   if (!ID_SEQUENCE())	 return 0;	out(";");
   return 1;
 }
 
-int ID_SEQUENCE() { d("ID_SEQUENCE",token,pending);
+int ID_SEQUENCE(void) { 
+  d("ID_SEQUENCE",token,pending);
   if (!IDENTIFIER())	return 0;
   while (match(",")) {
    out(",");
@@ -343,13 +350,15 @@ int ID_SEQUENCE() { d("ID_SEQUENCE",token,pending);
   return 1;
 }
 
-int IDENTIFIER() { d("IDENTIFIER",token,pending);
+int IDENTIFIER(void) { 
+  d("IDENTIFIER",token,pending);
   if (!id("X"))	return 0;		out("'X'");
-					Remove("X");
+	remove_("X");
   return 1;
 }
 
-int STATEMENT() { d("STATEMENT",token,pending);
+int STATEMENT(void) { 
+  d("STATEMENT",token,pending);
   return
   IO_STATEMENT()
   ||
@@ -362,7 +371,8 @@ int STATEMENT() { d("STATEMENT",token,pending);
   ASSIGN_STATEMENT();
 }
 
-int BLOCK() { d("BLOCK",token,pending);
+int BLOCK(void) { 
+  d("BLOCK",token,pending);
   if (!match("begin"))	return 0;	out("{");
   if (DECL_OR_ST())
     while(match(";"))
@@ -371,14 +381,16 @@ int BLOCK() { d("BLOCK",token,pending);
   return 1;
 }
 
-int DECL_OR_ST() { d("DECL_OR_ST",token,pending);
+int DECL_OR_ST(void) { 
+  d("DECL_OR_ST",token,pending);
   return
   DECLARATION()
   ||
   STATEMENT();
 }
 
-int IO_STATEMENT() { d("IO_STATEMENT",token,pending);
+int IO_STATEMENT(void) { 
+  d("IO_STATEMENT",token,pending);
   return
   PRINTS_STATEMENT()
   ||
@@ -387,30 +399,34 @@ int IO_STATEMENT() { d("IO_STATEMENT",token,pending);
   PRINT_STATEMENT();
 }
 
-int PRINTS_STATEMENT() { d("PRINTS_STATEMENT",token,pending);
+int PRINTS_STATEMENT(void) { 
+  d("PRINTS_STATEMENT",token,pending);
   if (!match("prints")) return 0;
   if (!match("("))	return 0;
   if (!string("S"))	return 0;	
-					out("printf(\"%s\", 'S');");
-					Remove("S"); 
+	 out("printf(\"%s\", 'S');");
+	 remove_("S"); 
   if (!match(")"))	return 0;
   return 1;
 }
 
-int PRINTN_STATEMENT() { d("PRINTN_STATEMENT",token,pending);
+int PRINTN_STATEMENT(void) { 
+  d("PRINTN_STATEMENT",token,pending);
   if (!match("printn")) return 0;
-  if (!match("("))	return 0;       out("printf(\"%d\",");
-  if (!EXPRESSION())	return 0;	out(");");
+  if (!match("("))	return 0; out("printf(\"%d\",");
+  if (!EXPRESSION()) return 0; out(");");
   if (!match(")"))	return 0;
   return 1;
 }
 
-int PRINT_STATEMENT() { d("PRINT_STATEMENT",token,pending);
-  if (!match("print"))	return 0;	out("printf(\"\\n\");");
+int PRINT_STATEMENT(void) { 
+  d("PRINT_STATEMENT",token,pending);
+  if (!match("print"))	return 0; out("printf(\"\\n\");");
   return 1;
 }
 
-int COND_STATEMENT() { d("COND_STATEMENT",token,pending);
+int COND_STATEMENT(void) { 
+  d("COND_STATEMENT",token,pending);
   if (!match("if"))	return 0;	out("if (");
   if (!EXPRESSION())	return 0;	out(")");
   if (!match("then"))	return 0;	
@@ -422,31 +438,34 @@ int COND_STATEMENT() { d("COND_STATEMENT",token,pending);
   return 1;
 }
 
-int WHILE_STATEMENT() { d("WHILE_STATEMENT",token,pending);
-  if (!match("while"))	return 0;	
-                                        out("while(");
-  if (!EXPRESSION())	return 0;	out(")");
+int WHILE_STATEMENT(void) { 
+  d("WHILE_STATEMENT",token,pending);
+  if (!match("while"))	return 0;  out("while(");
+  if (!EXPRESSION())	return 0;  out(")");
   if (!match("do"))	return 0;	
   if(!STATEMENT())	return 0;	
   return 1;
 }
 
-int ASSIGN_STATEMENT() { d("ASSIGN_STATEMENT",token,pending);
+int ASSIGN_STATEMENT(void) { 
+  d("ASSIGN_STATEMENT",token,pending);
   if (!id("Var"))	return 0;       out("'Var' =");
   if (!match(":"))	return 0;
   if (!match("="))	return 0;
   if (!EXPRESSION())	return 0;	out(";");
-					Remove("Var");
+					remove_("Var");
   return 1;
 }
 
-int EXPRESSION() { d("EXPRESSION",token,pending);
+int EXPRESSION(void) { 
+  d("EXPRESSION",token,pending);
   if (!EXPR1())		return 0;
   if (!OPT_RHS())	return 0;
   return 1;
 }
 
-int OPT_RHS() { d("OPT_RHS",token,pending);
+int OPT_RHS(void) { 
+  d("OPT_RHS",token,pending);
   return
   RHS_EQ()
   ||
@@ -455,54 +474,61 @@ int OPT_RHS() { d("OPT_RHS",token,pending);
   1;
 }
 
-int RHS_EQ() { d("RHS_EQ",token,pending);
+int RHS_EQ(void) { 
+  d("RHS_EQ",token,pending);
   if (!match("="))	return 0;	
 					out("==");
   if (!EXPR1())		return 0;	
   return 1;
 }
 
-int RHS_NEQ() { d("RHS_NEQ",token,pending);
+int RHS_NEQ(void) { 
+  d("RHS_NEQ",token,pending);
   if (!match("#"))	return 0;	
 					out("!=");
   if (!EXPR1())		return 0;	
   return 1;
 }
 
-int SIGNED_TERM() { d("SIGNED_TERM",token,pending);
+int SIGNED_TERM(void) { 
+  d("SIGNED_TERM",token,pending);
   return
   PLUS_TERM()
   ||
   MINUS_TERM();
 }
 
-int PLUS_TERM() { d("PLUS_TERM",token,pending);
+int PLUS_TERM(void) { 
+  d("PLUS_TERM",token,pending);
   if (!match("+"))	return 0;	out("+");      
   if (!TERM())		return 0;	
   return 1;
 }
 
-int MINUS_TERM() { d("MINUS_TERM",token,pending);
+int MINUS_TERM(void) { 
+  d("MINUS_TERM",token,pending);
   if (!match("-"))	return 0;	out("-");
   if (!TERM())		return 0;	
   return 1;
 }
 
-int TERM() { d("TERM",token,pending);
+int TERM(void) { 
+  d("TERM",token,pending);
   if (!PRIMARY())	return 0;
-  while (match("*")) {			out("*");
+  while (match("*")) { out("*");
     if (!PRIMARY())	return 0;	
   }
   return 1;
 }
 
-int PRIMARY() { d("PRIMARY",token,pending);
-  if (id("Z")) {			out("'Z'");       
-					Remove("Z");
+int PRIMARY(void) { 
+  d("PRIMARY",token,pending);
+  if (id("Z")) { out("'Z'");       
+    remove_("Z");
     return 1;
   }
-  if (number("Z")) {			out("'Z'");
-					Remove("Z");
+  if (number("Z")) { out("'Z'");
+    remove_("Z");
     return 1;
   }
   if (match("(")) {
@@ -515,15 +541,16 @@ int PRIMARY() { d("PRIMARY",token,pending);
   return 0;
 }
 
-int EXPR1() { d("EXPR1",token,pending);
+int EXPR1(void) { 
+  d("EXPR1",token,pending);
   if (!TERM())		return 0;
   while(SIGNED_TERM());
   return 1;
 }
 
-/* And finally, the debug function... */
 
-int d(s1,s2,s3) char *s1,*s2,*s3; {
+/* And finally, the debug function... */
+int d(char *s1, char *s2, char *s3) {
   if (debug) {
     printf("%s",s1);
     if (*s2) printf(" \"%s\"",s2);

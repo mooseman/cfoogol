@@ -2,17 +2,19 @@
 
 While looking around for public-domain parsers and interpreters, I 
 found this neat little compiler from comp.sources.misc (volume 42).  
-When you compile fc.c, you'll get lots of warnings but the code 
+When you compile fc.c, you'll get a few warnings but the code 
 does compile successfully, producing an executable, and the executable 
 works too - compiling a foogol program and emitting C code.  
 
 Note - the "cb" part (to make the emitted code more readable) doesn't 
 seem to work, but that's only a fairly minor thing. 
 
-This compiler was written by Per Lindberg (with changes by John Cowan).  The original README from comp.misc.sources is shown below.     		
+This compiler was written by Per Lindberg (with changes by John Cowan). 
+Header file "fc.h" added by Andy Elvey.  
+ The original README from comp.misc.sources is shown below.    		
 *****************************************************************************
 
-README.txt 					Last modified: 2010-09-18
+README.txt 					Last modified: 2010-09-19
 
 
 			The FOOGOL-IV compiler
