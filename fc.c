@@ -135,7 +135,8 @@ void error2(char *s1, char *s2) {
 
 void lowcase(char *s) {
   char c;
-  for (c = *s; c = *s; ++s) if (is_upper(c)) *s = to_lower(c);
+  for ( (c = *s); (c = *s); ++s) 
+    if (is_upper(c)) *s = to_lower(c) ;
 }
 
 
@@ -144,7 +145,7 @@ void lowcase(char *s) {
 int out(char *line) {
   char c, symb[MAXTOKEN], *subst(), *s = symb;
   int printmode = 1, chmode = 1;
-  while(c = *line++) {
+  while((c = *line++)) {
     if (c == ' ') { if (chmode) putc('\t',outf);
          chmode = 0;
     } else {
@@ -195,7 +196,7 @@ void get2(void) {
   }
   else {
     while ((type(c=getc(inf)) == typ
-            || typ == LETTER && type(c) == NUMBER)
+            || (typ == LETTER && type(c) == NUMBER) )
 	    && typ != RANDOM
             && c != EOF) {
       *p++ = c;
@@ -211,7 +212,7 @@ void get2(void) {
 int type(int c) {
   if (c == EOF) return -1;
   if (c >= '0' && c <= '9') return(NUMBER);
-  if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') return(LETTER);
+  if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return(LETTER);
   if (c == ' ' || c == '\t' || c == '\n') return(WHITESPACE); /*  */
   if (c == '"') return (QUOTE);
   if (c == ';') return (SEMICOLON);
@@ -234,7 +235,7 @@ int id(char *name) {
   char c, *p = token;
   d("id",token,name);
   if (type(*p++) != LETTER) return 0;
-  while (c = *p++) {
+  while ((c = *p++)) {
     t = type(c);
     if (t != NUMBER && t != LETTER) return(0);
   }
@@ -248,7 +249,7 @@ int id(char *name) {
 int number(char *name) {
   char c, *p = token;
   d("number",token,name);
-  while (c = *p++) {
+  while ((c = *p++)) {
     if (type(c) != NUMBER) return(0); 
   }  
   enter(name,token);
@@ -286,7 +287,8 @@ void enter(char *key, char *val) {
       return;
     }
   }
-  error2("INTERNAL SYMTAB ENTER ERROR, can't enter ", val);
+  error2("INTERNAL SYMTAB ENTER ERROR, can't enter ", val); 
+  return;  
 }
 
 
@@ -298,7 +300,8 @@ int lookup(char *key) {
       return i;
     }
   }
-  error2("INTERNAL SYMTAB LOOKUP ERROR, can't find ", key);
+  error2("INTERNAL SYMTAB LOOKUP ERROR, can't find ", key); 
+  return -1; 
 }
 
 

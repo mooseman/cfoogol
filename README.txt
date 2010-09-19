@@ -2,9 +2,12 @@
 
 While looking around for public-domain parsers and interpreters, I 
 found this neat little compiler from comp.sources.misc (volume 42).  
-When you compile fc.c, you'll get a few warnings but the code 
-does compile successfully, producing an executable, and the executable 
-works too - compiling a foogol program and emitting C code.  
+
+After a little bit of tweaking here and there, the code now compiles 
+without any warnings (using gcc 4.3.3. on Ubuntu).  
+
+When you compile fc.c, you'll get an executable, and the executable 
+compiles a foogol program, emitting C code.  
 
 Note - the "cb" part (to make the emitted code more readable) doesn't 
 seem to work, but that's only a fairly minor thing. 
